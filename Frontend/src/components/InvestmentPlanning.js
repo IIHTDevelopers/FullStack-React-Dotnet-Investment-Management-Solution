@@ -3,110 +3,149 @@ import InvestmentService from '../services/InvestmentService';
 
 const InvestmentPlanningComponent = () => {
     const [investments, setInvestments] = useState([]);
-    const [investment, setInvestment] = useState({ name: '', amount: '', date: '', category: '' });
+    const [filteredInvestments, setFilteredInvestments] = useState([]);
+    const [investment, setInvestment] = useState({
+        investmentId: 0,
+        investmentName: '',
+        initialInvestmentAmount: 0,
+        investmentStartDate: new Date(),
+        currentValue: 0,
+        investorId: 0
+    });
     const [selectedId, setSelectedId] = useState(null);
-    const [categories, setCategories] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState('');
+    const [responseMessage, setResponseMessage] = useState('');
 
     useEffect(() => {
         loadInvestments();
     }, []);
 
-    const loadInvestments = () => {
-        InvestmentService.getAllInvestments().then((data) => {
+    const loadInvestments = async () => {
+        try {
+            const data = await InvestmentService.getAllInvestments();
             setInvestments(data);
-            const uniqueCategories = [...new Set(data.map(item => item.category))];
-            setCategories(uniqueCategories);
-        });
+            setFilteredInvestments(data);
+        } catch (error) {
+            console.error('Error loading investments:', error);
+        }
     };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setInvestment({ ...investment, [name]: value });
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        setInvestment({
+            ...investment,
+            [name]: name === 'initialInvestmentAmount' || name === 'currentValue' || name === 'investorId'
+                ? parseFloat(value)
+                : name === 'investmentStartDate'
+                    ? new Date(value)
+                    : value
+        });
     };
 
     const isCreateButtonDisabled = () => {
-        return !investment.name || isNaN(Number(investment.amount)) || isNaN(Date.parse(investment.date)) || !investment.category;
+        return !investment.investmentName ||
+            isNaN(investment.initialInvestmentAmount) ||
+            isNaN(Date.parse(investment.investmentStartDate)) ||
+            isNaN(investment.currentValue) ||
+            isNaN(investment.investorId);
     };
 
-    const handleCreateInvestment = () => {
-        InvestmentService.createInvestment(investment).then(() => {
+    const handleCreateInvestment = async () => {
+        try {
+            await InvestmentService.createInvestment(investment);
+            setResponseMessage('Investment created successfully!');
             loadInvestments();
-            setInvestment({ name: '', amount: '', date: '', category: '' });
-        });
+            resetInvestmentForm();
+        } catch (error) {
+            setResponseMessage('Error creating investment: ' + error.message);
+        }
     };
 
-    const handleUpdateInvestment = () => {
+    const handleUpdateInvestment = async () => {
         if (selectedId) {
-            InvestmentService.updateInvestment(selectedId, investment).then(() => {
+            try {
+                await InvestmentService.updateInvestment(investment);
+                setResponseMessage('Investment updated successfully!');
                 loadInvestments();
-                setInvestment({ name: '', amount: '', date: '', category: '' });
+                resetInvestmentForm();
                 setSelectedId(null);
-            });
+            } catch (error) {
+                setResponseMessage('Error updating investment: ' + error.message);
+            }
         }
     };
 
-    const handleEditInvestment = (id) => {
-        InvestmentService.getInvestmentById(id).then((data) => {
-            const formattedDate = new Date(data.date).toISOString().split('T')[0];
-            setInvestment({ ...data, date: formattedDate });
+    const handleEditInvestment = async (id) => {
+        try {
+            const data = await InvestmentService.getInvestmentById(id);
+            setInvestment({ ...data, investmentStartDate: new Date(data.investmentStartDate) });
             setSelectedId(id);
-        });
-    };
-
-    const handleDeleteInvestment = (id) => {
-        InvestmentService.deleteInvestment(id).then(() => {
-            loadInvestments();
-            setInvestment({ name: '', amount: '', date: '', category: '' });
-            setSelectedId(null);
-        });
-    };
-
-    const handleFilterByCategory = () => {
-        if (selectedCategory) {
-            InvestmentService.fetchByCategories(selectedCategory).then((data) => setInvestments(data));
-        } else {
-            loadInvestments();
+        } catch (error) {
+            setResponseMessage(JSON.stringify(error));
         }
+    };
+
+    const handleDeleteInvestment = async (id) => {
+        try {
+            await InvestmentService.deleteInvestment(id);
+            setResponseMessage('Investment deleted successfully!');
+            loadInvestments();
+            resetInvestmentForm();
+            setSelectedId(null);
+        } catch (error) {
+            setResponseMessage('Error deleting investment: ' + error.message);
+        }
+    };
+
+    const resetInvestmentForm = () => {
+        setInvestment({
+            investmentId: 0,
+            investmentName: '',
+            initialInvestmentAmount: 0,
+            investmentStartDate: new Date(),
+            currentValue: 0,
+            investorId: 0
+        });
     };
 
     return (
         <div>
-            <h1>Investments</h1>
-            <div>
-                <label>Filter by:</label>
-                <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                >
-                    <option value="">All</option>
-                    {categories.map((category) => (
-                        <option key={category} value={category}>
-                            {category}
-                        </option>
-                    ))}
-                </select>
-                <button onClick={handleFilterByCategory}>Apply Filter</button>
-            </div>
+            <h1>All Investments</h1>
             <ul>
-                {investments.map((item) => (
-                    <li key={item.id}>
-                        {item.name} - {item.amount} - {item.date} - {item.category}
-                        <button onClick={() => handleEditInvestment(item.id)}>Edit</button>
-                        <button onClick={() => handleDeleteInvestment(item.id)}>Delete</button>
+                {filteredInvestments.map((item) => (
+                    <li key={item.investmentId}>
+                        {item.investmentName} - {item.initialInvestmentAmount} - {new Date(item.investmentStartDate).toLocaleDateString()} - {item.currentValue} - {item.investorId}
+                        <button onClick={() => handleEditInvestment(item.investmentId)}>Edit</button>
+                        <button onClick={() => handleDeleteInvestment(item.investmentId)}>Delete</button>
                     </li>
                 ))}
             </ul>
             <div>
                 <h2>Create/Update Investment</h2>
-                <input type="text" name="name" value={investment.name} onChange={handleInputChange} placeholder="Name" />
-                <input type="number" name="amount" value={investment.amount} onChange={handleInputChange} placeholder="Amount" />
-                <input type="date" name="date" value={investment.date} onChange={handleInputChange} placeholder="Date" />
-                <input type="text" name="category" value={investment.category} onChange={handleInputChange} placeholder="Category" />
+                <div>
+                    <label htmlFor="investmentName">Investment Name:</label>
+                    <input type="text" id="investmentName" name="investmentName" value={investment.investmentName} onChange={handleInputChange} placeholder="Investment Name" />
+                </div>
+                <div>
+                    <label htmlFor="initialInvestmentAmount">Initial Amount:</label>
+                    <input type="number" id="initialInvestmentAmount" name="initialInvestmentAmount" value={investment.initialInvestmentAmount} onChange={handleInputChange} placeholder="Initial Amount" />
+                </div>
+                <div>
+                    <label htmlFor="investmentStartDate">Start Date:</label>
+                    <input type="date" id="investmentStartDate" name="investmentStartDate" value={investment.investmentStartDate.toISOString().split('T')[0]} onChange={handleInputChange} placeholder="Start Date" />
+                </div>
+                <div>
+                    <label htmlFor="currentValue">Current Value:</label>
+                    <input type="number" id="currentValue" name="currentValue" value={investment.currentValue} onChange={handleInputChange} placeholder="Current Value" />
+                </div>
+                <div>
+                    <label htmlFor="investorId">Investor ID:</label>
+                    <input type="number" id="investorId" name="investorId" value={investment.investorId} onChange={handleInputChange} placeholder="Investor ID" />
+                </div>
                 <button onClick={selectedId ? handleUpdateInvestment : handleCreateInvestment} disabled={isCreateButtonDisabled()}>
                     {selectedId ? 'Update' : 'Create'}
                 </button>
             </div>
+            {responseMessage && <div className="response-message">{responseMessage}</div>}
         </div>
     );
 };
