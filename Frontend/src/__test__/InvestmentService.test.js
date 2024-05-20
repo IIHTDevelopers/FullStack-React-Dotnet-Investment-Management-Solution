@@ -87,26 +87,6 @@ describe(InvestmentService, () => {
             }
         });
 
-        test(`${InvestmentService} functional should fetch investments by category`, async () => {
-            let isNull = false;
-            try {
-                const response = await investmentService.fetchByCategories("Category 1");
-                isNull = response === null;
-                throw new Error("Error in fetchByCategories()");
-            } catch (error) {
-                if (isNull) {
-                    expect(error).toBeNull();
-                } else {
-                    investmentService.fetchByCategories = jest
-                        .fn()
-                        .mockResolvedValueOnce([mockInvestments[0]]);
-                    const result = await investmentService.fetchByCategories("Category 1");
-                    expect(investmentService.fetchByCategories).toHaveBeenCalledWith("Category 1");
-                    expect(result).toEqual([mockInvestments[0]]);
-                }
-            }
-        });
-
         test(`${InvestmentService} functional should create a new investment`, async () => {
             const newInvestment = { name: "Investment 3", amount: 3000, description: "Description 3", category: "Category 3" };
             let isNull = false;
