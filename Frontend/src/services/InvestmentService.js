@@ -1,47 +1,52 @@
-const API_BASE_URL = 'http://localhost:8081/investment/api/investments';
+const apiUrl = 'http://localhost:5000';
 
 const getAllInvestments = async () => {
-    const response = await fetch(API_BASE_URL);
+    const response = await fetch(`${apiUrl}/get-all-investments`);
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
     return response.json();
 };
 
 const getInvestmentById = async (id) => {
-    const response = await fetch(`${API_BASE_URL}/${id}`);
+    const response = await fetch(`${apiUrl}/get-Investment-by-id?id=${id}`);
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
     return response.json();
 };
 
 const createInvestment = async (investment) => {
-    const response = await fetch(API_BASE_URL, {
+    const response = await fetch(`${apiUrl}/create-investment`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(investment),
     });
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
     return response.json();
 };
 
-const updateInvestment = async (id, investment) => {
-    const response = await fetch(`${API_BASE_URL}/${id}`, {
+const updateInvestment = async (investment) => {
+    const response = await fetch(`${apiUrl}/update-investment`, {
         method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(investment),
     });
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
     return response.json();
 };
 
 const deleteInvestment = async (id) => {
-    await fetch(`${API_BASE_URL}/${id}`, {
+    const response = await fetch(`${apiUrl}/delete-Investment?id=${id}`, {
         method: 'DELETE',
     });
-};
-
-const fetchByCategories = async (category) => {
-    const response = await fetch(`${API_BASE_URL}/category/${category}`, {
-        method: 'GET',
-    });
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
     return response.json();
 };
 
@@ -50,6 +55,5 @@ export default {
     getInvestmentById,
     createInvestment,
     updateInvestment,
-    deleteInvestment,
-    fetchByCategories
+    deleteInvestment
 };
