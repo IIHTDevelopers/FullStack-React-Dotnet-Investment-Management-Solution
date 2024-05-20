@@ -1,9 +1,10 @@
 export default class Investment {
-    constructor(id, name, amount, date, category) {
-        this.id = id;
-        this.name = name;
-        this.amount = amount;
-        this.date = date;
-        this.category = category;
+    constructor(investmentId, investmentName, initialInvestmentAmount, investmentStartDate, currentValue, investorId) {
+        this.investmentId = investmentId;
+        this.investmentName = investmentName;
+        this.initialInvestmentAmount = initialInvestmentAmount;
+        this.investmentStartDate = investmentStartDate;
+        this.currentValue = currentValue;
+        this.investorId = investorId;
     }
 }
