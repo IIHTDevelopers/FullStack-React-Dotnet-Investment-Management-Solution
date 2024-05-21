@@ -42,7 +42,7 @@ FrontEnd-Commands
 
 * npm install -> Will install all dependencies -> takes 10 to 15 min
 
-* npm run start -> To compile and deploy the project in browser. You can press <Ctrl> key while clicking on localhost:4200 to open project in browser -> takes 2 to 3 min
+* npm run start -> To compile and deploy the project in browser. You can press <Ctrl> key while clicking on localhost:8081 to open project in browser -> takes 2 to 3 min
 
 * npm run jest -> to run all test cases and see the summary
 
